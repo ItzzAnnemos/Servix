@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servix — Find Trusted Craftsmen Near You</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+        trust: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
+        slate: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a' }
+      },
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'Inter', system-ui, sans-serif; }
+  .fade-in { animation: fadeIn 0.3s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .slide-in { animation: slideIn 0.3s ease-out; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  .star-filled { color: #fbbf24; }
+  .star-empty { color: #d1d5db; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); }
+  .hero-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%); }
+  .card-hover { transition: all 0.2s ease; }
+  .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1); }
+  .btn-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+  .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+  .btn-trust { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .btn-trust:hover { background: linear-gradient(135deg, #16a34a, #15803d); }
+  .rating-bar-bg { background: #e2e8f0; border-radius: 999px; height: 6px; }
+  .rating-bar-fill { background: #fbbf24; border-radius: 999px; height: 6px; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+// ─── Icons (inline SVG for reliability) ───
+const Icon = ({ name, size = 20, className = "" }) => {
+  const icons = {
+    search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+    star: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
+    starHalf: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77V2z"/></svg>,
+    starOutline: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
+    mapPin: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+    calendar: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+    check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>,
+    checkCircle: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+    x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+    arrowRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+    arrowLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+    user: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    briefcase: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
+    wrench: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
+    zap: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+    droplet: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>,
+    paintbrush: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18.375 2.625a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414L9.414 17.586a1 1 0 0 1-.707.293H5.828a1 1 0 0 1-1-1v-2.879a1 1 0 0 1 .293-.707l11.254-11.254z"/><path d="M15 15l-3.5 3.5"/><path d="M14 9l-7 7"/></svg>,
+    hammer: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m17 13-4-4"/><path d="m15 15 4-4"/><path d="M15 15l-2 2"/><path d="M15 15l-4-4"/><path d="M2 21l4-4"/><path d="M22 7l-4-4"/><path d="M15 15l-2-2"/></svg>,
+    filter: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+    menu: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+    home: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    shield: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+    messageSquare: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+    clock: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+    dollarSign: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+    image: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+    thumbsUp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>,
+    settings: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+    logOut: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+    clipboard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
+    phone: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+    mail: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>,
+    award: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
+    trendUp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+    info: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+    alertCircle: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+    send: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  };
+  return icons[name] || null;
+};
+
+const StarRating = ({ rating, size = 16, showValue = false, className = "" }) => {
+  const stars = [];
+  for (let i = 1; i <= 5; i++) {
+    if (i <= Math.floor(rating)) {
+      stars.push(<Icon key={i} name="star" size={size} className={`star-filled ${className}`} />);
+    } else if (i === Math.ceil(rating) && rating % 1 !== 0) {
+      stars.push(<Icon key={i} name="starHalf" size={size} className={`star-filled ${className}`} />);
+    } else {
+      stars.push(<Icon key={i} name="starOutline" size={size} className={`star-empty ${className}`} />);
+    }
+  }
+  return <div className="flex items-center gap-0.5">{stars}{showValue && <span className="ml-1 text-sm font-medium text-slate-600">{rating.toFixed(1)}</span>}</div>;
+};
+
+const Badge = ({ children, color = "blue" }) => {
+  const colors = {
+    blue: "bg-brand-100 text-brand-700",
+    green: "bg-trust-100 text-trust-700",
+    amber: "bg-amber-100 text-amber-700",
+    red: "bg-red-100 text-red-700",
+    slate: "bg-slate-100 text-slate-700",
+  };
+  return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[color] || colors.blue}`}>{children}</span>;
+};
+
+// ─── Mock Data ───
+const categories = [
+  { id: "all", label: "All Services", icon: "briefcase" },
+  { id: "electrician", label: "Electrician", icon: "zap" },
+  { id: "plumber", label: "Plumber", icon: "droplet" },
+  { id: "painter", label: "Painter", icon: "paintbrush" },
+  { id: "carpenter", label: "Carpenter", icon: "hammer" },
+  { id: "handyman", label: "Handyman", icon: "wrench" },
+];
+
+const initialCraftsmen = [
+  {
+    id: 1,
+    name: "Marcus Chen",
+    category: "electrician",
+    experience: 12,
+    rating: 4.8,
+    reviewCount: 47,
+    bio: "Licensed master electrician with 12+ years of experience in residential and commercial wiring. Specializing in panel upgrades, smart home installations, and emergency repairs. I take pride in clean, code-compliant work and always clean up after myself.",
+    services: ["Electrical Panel Upgrades", "Smart Home Wiring", "Emergency Repairs", "Lighting Installation", "EV Charger Installation"],
+    availability: "Available today",
+    available: true,
+    priceRange: "$80–$120/hr",
+    location: "Downtown, 2.3 mi",
+    reviews: [
+      { id: 1, author: "Sarah J.", rating: 5, date: "2 weeks ago", text: "Marcus rewired our entire kitchen in one day. Professional, punctual, and explained everything clearly. Highly recommend!" },
+      { id: 2, author: "David K.", rating: 5, date: "1 month ago", text: "Installed our EV charger perfectly. Fair pricing and top-notch work. Will hire again." },
+      { id: 3, author: "Lisa M.", rating: 4, date: "2 months ago", text: "Great work on the lighting installation. Only minor delay due to parts, but communicated well throughout." },
+    ],
+    ratingBreakdown: { 5: 35, 4: 8, 3: 3, 2: 1, 1: 0 },
+    completedJobs: 156,
+  },
+  {
+    id: 2,
+    name: "Elena Rodriguez",
+    category: "plumber",
+    experience: 8,
+    rating: 4.9,
+    reviewCount: 62,
+    bio: "Family-owned plumbing business with a reputation for honesty and quality. I handle everything from leaky faucets to full bathroom renovations. No job too small — I treat every home like it's my own.",
+    services: ["Leak Detection & Repair", "Bathroom Renovation", "Water Heater Install", "Drain Cleaning", "Pipe Replacement"],
+    availability: "Available tomorrow",
+    available: true,
+    priceRange: "$70–$100/hr",
+    location: "Westside, 4.1 mi",
+    reviews: [
+      { id: 1, author: "James T.", rating: 5, date: "1 week ago", text: "Elena fixed a burst pipe in our basement at 10 PM. Lifesaver! Reasonable emergency rates too." },
+      { id: 2, author: "Amanda R.", rating: 5, date: "3 weeks ago", text: "Renovated our master bathroom beautifully. On time, on budget, and the tile work is gorgeous." },
+      { id: 3, author: "Robert P.", rating: 4, date: "1 month ago", text: "Good work on the water heater install. Very tidy and professional." },
+    ],
+    ratingBreakdown: { 5: 52, 4: 8, 3: 2, 2: 0, 1: 0 },
+    completedJobs: 203,
+  },
+  {
+    id: 3,
+    name: "James Okafor",
+    category: "painter",
+    experience: 15,
+    rating: 4.6,
+    reviewCount: 34,
+    bio: "Award-winning painter with 15 years transforming homes. From subtle accent walls to full exterior makeovers, I bring color expertise and meticulous prep work. I use premium paints and guarantee clean lines.",
+    services: ["Interior Painting", "Exterior Painting", "Cabinet Refinishing", "Wallpaper Removal", "Color Consultation"],
+    availability: "Booked this week",
+    available: false,
+    priceRange: "$50–$90/hr",
+    location: "North End, 1.8 mi",
+    reviews: [
+      { id: 1, author: "Karen S.", rating: 5, date: "3 weeks ago", text: "James painted our entire house interior. The color matching was perfect and not a single drip anywhere." },
+      { id: 2, author: "Tom H.", rating: 4, date: "2 months ago", text: "Great exterior paint job. Took a bit longer than quoted but the result was worth it." },
+      { id: 3, author: "Nina W.", rating: 4, date: "3 months ago", text: "Good cabinet refinishing. Would have liked more communication on timeline." },
+    ],
+    ratingBreakdown: { 5: 22, 4: 8, 3: 3, 2: 1, 1: 0 },
+    completedJobs: 128,
+  },
+  {
+    id: 4,
+    name: "Tom Bradley",
+    category: "carpenter",
+    experience: 20,
+    rating: 4.7,
+    reviewCount: 28,
+    bio: "Third-generation carpenter with 20 years of custom woodworking experience. I build bespoke furniture, custom cabinetry, and handle structural repairs. Every piece is crafted with precision and built to last generations.",
+    services: ["Custom Furniture", "Built-in Cabinetry", "Deck Building", "Structural Repairs", "Trim & Molding"],
+    availability: "Available today",
+    available: true,
+    priceRange: "$90–$140/hr",
+    location: "Eastside, 3.5 mi",
+    reviews: [
+      { id: 1, author: "Helen G.", rating: 5, date: "1 week ago", text: "Tom built us a custom bookshelf that fits our odd-shaped nook perfectly. True craftsmanship." },
+      { id: 2, author: "Mark D.", rating: 5, date: "1 month ago", text: "Rebuilt our deck and it looks better than new. Solid construction, beautiful finish." },
+      { id: 3, author: "Chris L.", rating: 4, date: "2 months ago", text: "Great trim work throughout the house. Very detailed and professional." },
+    ],
+    ratingBreakdown: { 5: 20, 4: 5, 3: 2, 2: 1, 1: 0 },
+    completedJobs: 89,
+  },
+  {
+    id: 5,
+    name: "Aisha Patel",
+    category: "handyman",
+    experience: 6,
+    rating: 4.5,
+    reviewCount: 41,
+    bio: "Your friendly neighborhood handyman! I tackle all those small-to-medium jobs that bigger contractors won't touch. Furniture assembly, drywall repair, fixture installation — I'm fast, reliable, and fairly priced.",
+    services: ["Furniture Assembly", "Drywall Repair", "Fixture Installation", "TV Mounting", "General Repairs"],
+    availability: "Available today",
+    available: true,
+    priceRange: "$45–$75/hr",
+    location: "South District, 1.2 mi",
+    reviews: [
+      { id: 1, author: "Jake B.", rating: 5, date: "3 days ago", text: "Aisha mounted 3 TVs and assembled an IKEA kitchen in one afternoon. Incredible speed and precision." },
+      { id: 2, author: "Monica V.", rating: 4, date: "2 weeks ago", text: "Fixed our drywall and painted the patch seamlessly. Very reasonable pricing." },
+      { id: 3, author: "Paul N.", rating: 4, date: "1 month ago", text: "Reliable and communicative. Did a great job on various small repairs around the house." },
+    ],
+    ratingBreakdown: { 5: 25, 4: 10, 3: 4, 2: 2, 1: 0 },
+    completedJobs: 178,
+  },
+  {
+    id: 6,
+    name: "Diego Morales",
+    category: "electrician",
+    experience: 9,
+    rating: 4.4,
+    reviewCount: 19,
+    bio: "Commercial and residential electrician focused on energy-efficient solutions. I help homeowners reduce their energy bills with LED retrofits, solar-ready wiring, and smart panel installations.",
+    services: ["LED Retrofits", "Solar-Ready Wiring", "Smart Panels", "Circuit Installation", "Safety Inspections"],
+    availability: "Available tomorrow",
+    available: true,
+    priceRange: "$75–$110/hr",
+    location: "Uptown, 5.2 mi",
+    reviews: [
+      { id: 1, author: "Rachel F.", rating: 5, date: "2 weeks ago", text: "Diego's LED retrofit cut our energy bill by 40%. He explained every option and didn't upsell." },
+      { id: 2, author: "Steve W.", rating: 4, date: "1 month ago", text: "Good work on the smart panel. A couple of scheduling hiccups but the end result is solid." },
+    ],
+    ratingBreakdown: { 5: 12, 4: 5, 3: 2, 2: 0, 1: 0 },
+    completedJobs: 97,
+  },
+];
+
+const initialBookings = [
+  { id: 101, craftsmanId: 1, clientName: "Demo User", date: "2026-06-15", time: "10:00 AM", service: "Lighting Installation", description: "Install 4 pendant lights in kitchen", price: "$320", status: "completed", reviewed: false },
+  { id: 102, craftsmanId: 2, clientName: "Demo User", date: "2026-06-18", time: "2:00 PM", service: "Leak Repair", description: "Fix leaking pipe under kitchen sink", price: "$180", status: "pending", reviewed: false },
+];
+
+const craftsmanBookings = [
+  { id: 201, clientName: "Sarah Johnson", date: "2026-06-14", time: "9:00 AM", service: "Panel Upgrade", description: "Upgrade 100A to 200A panel", price: "$2,400", status: "pending" },
+  { id: 202, clientName: "Mike Peters", date: "2026-06-16", time: "1:00 PM", service: "EV Charger Install", description: "Install Level 2 charger in garage", price: "$850", status: "pending" },
+  { id: 203, clientName: "Anna Lee", date: "2026-06-10", time: "11:00 AM", service: "Smart Home Wiring", description: "Wire smart switches throughout house", price: "$600", status: "accepted" },
+];
+
+// ─── App Component ───
+function App() {
+  const [page, setPage] = useState("landing");
+  const [craftsmen, setCraftsmen] = useState(initialCraftsmen);
+  const [bookings, setBookings] = useState(initialBookings);
+  const [selectedCraftsman, setSelectedCraftsman] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [userRole, setUserRole] = useState(null); // 'client' or 'provider'
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navigate = (target, craftsman = null, booking = null) => {
+    setPage(target);
+    if (craftsman) setSelectedCraftsman(craftsman);
+    if (booking) setSelectedBooking(booking);
+    setMobileMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  const addReview = (craftsmanId, review) => {
+    setCraftsmen(prev => prev.map(c => {
+      if (c.id !== craftsmanId) return c;
+      const newReviews = [review, ...c.reviews];
+      const newCount = c.reviewCount + 1;
+      const newRating = ((c.rating * c.reviewCount) + review.rating) / newCount;
+      const newBreakdown = { ...c.ratingBreakdown };
+      newBreakdown[review.rating] = (newBreakdown[review.rating] || 0) + 1;
+      return { ...c, reviews: newReviews, reviewCount: newCount, rating: Math.round(newRating * 10) / 10, ratingBreakdown: newBreakdown };
+    }));
+    setBookings(prev => prev.map(b => b.id === selectedBooking?.id ? { ...b, reviewed: true } : b));
+  };
+
+  const updateBookingStatus = (bookingId, status) => {
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status } : b));
+  };
+
+  const addBooking = (booking) => {
+    setBookings(prev => [booking, ...prev]);
+  };
+
+  const renderPage = () => {
+    switch (page) {
+      case "landing": return <LandingPage navigate={navigate} setUserRole={setUserRole} />;
+      case "browse": return <BrowsePage navigate={navigate} craftsmen={craftsmen} />;
+      case "profile": return <CraftsmanProfilePage navigate={navigate} craftsman={selectedCraftsman} />;
+      case "book": return <BookServicePage navigate={navigate} craftsman={selectedCraftsman} addBooking={addBooking} />;
+      case "dashboard": return <CraftsmanDashboard navigate={navigate} craftsmen={craftsmen} bookings={craftsmanBookings} updateBookingStatus={updateBookingStatus} />;
+      case "review": return <ReviewPage navigate={navigate} booking={selectedBooking} craftsman={craftsmen.find(c => c.id === selectedBooking?.craftsmanId)} addReview={addReview} />;
+      case "clientBookings": return <ClientBookingsPage navigate={navigate} bookings={bookings} craftsmen={craftsmen} />;
+      default: return <LandingPage navigate={navigate} setUserRole={setUserRole} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Navbar page={page} navigate={navigate} userRole={userRole} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+      <main className="fade-in">
+        {renderPage()}
+      </main>
+      {page !== "landing" && <Footer navigate={navigate} />}
+    </div>
+  );
+}
+
+// ─── Navbar ───
+function Navbar({ page, navigate, userRole, mobileMenuOpen, setMobileMenuOpen }) {
+  if (page === "landing") return null;
+  const isClient = userRole === "client" || !userRole;
+  const isProvider = userRole === "provider";
+
+  return (
+    <nav className="sticky top-0 z-50 glass border-b border-slate-200">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-14">
+          <button onClick={() => navigate("landing")} className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center">
+              <Icon name="wrench" size={16} className="text-white" />
+            </div>
+            <span className="font-bold text-lg text-slate-800 tracking-tight">Servix</span>
+          </button>
+
+          <div className="hidden md:flex items-center gap-1">
+            <NavBtn active={page === "browse"} onClick={() => navigate("browse")} icon="search" label="Find Pros" />
+            {isClient && <NavBtn active={page === "clientBookings"} onClick={() => navigate("clientBookings")} icon="clipboard" label="My Bookings" />}
+            {isProvider && <NavBtn active={page === "dashboard"} onClick={() => navigate("dashboard")} icon="briefcase" label="Dashboard" />}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-slate-100">
+              <Icon name={mobileMenuOpen ? "x" : "menu"} size={20} className="text-slate-600" />
+            </button>
+            <div className="hidden md:flex items-center gap-2">
+              <button onClick={() => { navigate("landing"); }} className="text-sm text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition">
+                Switch Role
+              </button>
+              <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center">
+                <Icon name="user" size={16} className="text-brand-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1">
+          <MobileNavBtn onClick={() => navigate("browse")} icon="search" label="Find Pros" />
+          {isClient && <MobileNavBtn onClick={() => navigate("clientBookings")} icon="clipboard" label="My Bookings" />}
+          {isProvider && <MobileNavBtn onClick={() => navigate("dashboard")} icon="briefcase" label="Dashboard" />}
+          <MobileNavBtn onClick={() => { navigate("landing"); }} icon="logOut" label="Switch Role" />
+        </div>
+      )}
+    </nav>
+  );
+}
+
+function NavBtn({ active, onClick, icon, label }) {
+  return (
+    <button onClick={onClick} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${active ? "bg-brand-50 text-brand-700" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}>
+      <Icon name={icon} size={16} />
+      {label}
+    </button>
+  );
+}
+
+function MobileNavBtn({ onClick, icon, label }) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+      <Icon name={icon} size={18} />
+      {label}
+    </button>
+  );
+}
+
+// ─── Landing Page ───
+function LandingPage({ navigate, setUserRole }) {
+  return (
+    <div>
+      {/* Hero */}
+      <section className="hero-gradient text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+              <Icon name="shield" size={14} />
+              Trusted by 10,000+ homeowners
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6">
+              Find trusted craftsmen<br/>near you
+            </h1>
+            <p className="text-lg sm:text-xl text-blue-100 mb-8 leading-relaxed max-w-xl">
+              Connect with verified electricians, plumbers, painters, and more. Transparent agreements, clear pricing, and honest reviews — every time.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => { setUserRole("client"); navigate("browse"); }}
+                className="btn-primary text-white px-6 py-3.5 rounded-xl font-semibold text-base shadow-lg shadow-blue-900/30 hover:shadow-xl hover:shadow-blue-900/40 transition flex items-center justify-center gap-2"
+              >
+                <Icon name="search" size={18} />
+                I need a service
+              </button>
+              <button
+                onClick={() => { setUserRole("provider"); navigate("dashboard"); }}
+                className="bg-white/10 backdrop-blur-sm text-white border border-white/20 px-6 py-3.5 rounded-xl font-semibold text-base hover:bg-white/20 transition flex items-center justify-center gap-2"
+              >
+                <Icon name="briefcase" size={18} />
+                I'm a craftsman
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="h-16 bg-slate-50" style={{ clipPath: "ellipse(75% 100% at 50% 100%)" }}></div>
+      </section>
+
+      {/* How It Works */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-slate-800 mb-3">How Servix works</h2>
+          <p className="text-slate-500 text-lg max-w-xl mx-auto">Four simple steps from search to satisfaction</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StepCard number="1" icon="search" title="Search & filter" desc="Browse verified craftsmen by category, location, and ratings." />
+          <StepCard number="2" icon="clipboard" title="Agree on terms" desc="Review clear scope, pricing, and timeline before booking." />
+          <StepCard number="3" icon="checkCircle" title="Get the job done" desc="Your craftsman arrives on time and completes the work." />
+          <StepCard number="4" icon="star" title="Rate & review" desc="Share your experience to help the community." />
+        </div>
+      </section>
+
+      {/* Categories Preview */}
+      <section className="bg-white border-y border-slate-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-slate-800 mb-3">Popular services</h2>
+            <p className="text-slate-500 text-lg">Quality professionals across every trade</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categories.filter(c => c.id !== "all").map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => { setUserRole("client"); navigate("browse"); }}
+                className="group flex flex-col items-center gap-3 p-6 rounded-2xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition card-hover"
+              >
+                <div className="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center group-hover:bg-brand-100 transition">
+                  <Icon name={cat.icon} size={24} />
+                </div>
+                <span className="font-semibold text-slate-700 text-sm">{cat.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Signals */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+        <div className="grid sm:grid-cols-3 gap-8">
+          <TrustCard icon="shield" title="Verified Profiles" desc="Every craftsman is identity-verified and background-checked." />
+          <TrustCard icon="dollarSign" title="Transparent Pricing" desc="No hidden fees. See estimated costs before you book." />
+          <TrustCard icon="messageSquare" title="Honest Reviews" desc="Only verified clients can leave reviews. No fake ratings." />
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-slate-900 text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to get started?</h2>
+          <p className="text-slate-400 text-lg mb-8 max-w-xl mx-auto">Join thousands of homeowners who found their perfect craftsman on Servix.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button onClick={() => { setUserRole("client"); navigate("browse"); }} className="btn-primary text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-900/50 hover:shadow-xl transition flex items-center justify-center gap-2">
+              <Icon name="search" size={18} />
+              Find a Craftsman
+            </button>
+            <button onClick={() => { setUserRole("provider"); navigate("dashboard"); }} className="bg-slate-800 text-white border border-slate-700 px-8 py-3.5 rounded-xl font-semibold hover:bg-slate-700 transition flex items-center justify-center gap-2">
+              <Icon name="briefcase" size={18} />
+              Join as Pro
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function StepCard({ number, icon, title, desc }) {
+  return (
+    <div className="relative p-6 rounded-2xl bg-white border border-slate-200 card-hover">
+      <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full btn-primary text-white flex items-center justify-center text-sm font-bold shadow-lg">
+        {number}
+      </div>
+      <div className="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center mb-4">
+        <Icon name={icon} size={24} />
+      </div>
+      <h3 className="font-bold text-slate-800 mb-2">{title}</h3>
+      <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+function TrustCard({ icon, title, desc }) {
+  return (
+    <div className="flex flex-col items-center text-center p-6">
+      <div className="w-14 h-14 rounded-2xl bg-trust-50 text-trust-600 flex items-center justify-center mb-4">
+        <Icon name={icon} size={28} />
+      </div>
+      <h3 className="font-bold text-slate-800 mb-2">{title}</h3>
+      <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+// ─── Browse Page ───
+function BrowsePage({ navigate, craftsmen }) {
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+  const [minRating, setMinRating] = useState(0);
+  const [sortBy, setSortBy] = useState("rating");
+
+  const filtered = useMemo(() => {
+    let result = craftsmen.filter(c => {
+      const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.services.some(s => s.toLowerCase().includes(search.toLowerCase())) ||
+        c.bio.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = activeCategory === "all" || c.category === activeCategory;
+      const matchesRating = c.rating >= minRating;
+      return matchesSearch && matchesCategory && matchesRating;
+    });
+    if (sortBy === "rating") result.sort((a, b) => b.rating - a.rating);
+    if (sortBy === "experience") result.sort((a, b) => b.experience - a.experience);
+    if (sortBy === "reviews") result.sort((a, b) => b.reviewCount - a.reviewCount);
+    return result;
+  }, [craftsmen, search, activeCategory, minRating, sortBy]);
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Find a craftsman</h1>
+        <p className="text-slate-500">Browse {craftsmen.length} verified professionals in your area</p>
+      </div>
+
+      {/* Search & Filters */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by name, service, or keyword..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none text-sm"
+            />
+          </div>
+          <button onClick={() => setShowFilters(!showFilters)} className="sm:hidden flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm">
+            <Icon name="filter" size={16} />
+            Filters
+          </button>
+          <div className="hidden sm:flex items-center gap-2">
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 focus:border-brand-400 outline-none bg-white">
+              <option value="rating">Top Rated</option>
+              <option value="experience">Most Experienced</option>
+              <option value="reviews">Most Reviews</option>
+            </select>
+            <select value={minRating} onChange={e => setMinRating(Number(e.target.value))} className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 focus:border-brand-400 outline-none bg-white">
+              <option value={0}>Any Rating</option>
+              <option value={4.5}>4.5+ Stars</option>
+              <option value={4.0}>4.0+ Stars</option>
+              <option value={3.0}>3.0+ Stars</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Category Chips */}
+        <div className="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1">
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${activeCategory === cat.id ? "btn-primary text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            >
+              <Icon name={cat.icon} size={14} />
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Mobile Filters */}
+        {showFilters && (
+          <div className="sm:hidden mt-4 pt-4 border-t border-slate-100 flex gap-2">
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 outline-none">
+              <option value="rating">Top Rated</option>
+              <option value="experience">Most Experienced</option>
+              <option value="reviews">Most Reviews</option>
+            </select>
+            <select value={minRating} onChange={e => setMinRating(Number(e.target.value))} className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 outline-none">
+              <option value={0}>Any Rating</option>
+              <option value={4.5}>4.5+</option>
+              <option value={4.0}>4.0+</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Results */}
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-sm text-slate-500">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</span>
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filtered.map(craftsman => (
+          <CraftsmanCard key={craftsman.id} craftsman={craftsman} navigate={navigate} />
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <Icon name="search" size={28} className="text-slate-400" />
+          </div>
+          <h3 className="font-semibold text-slate-700 mb-1">No craftsmen found</h3>
+          <p className="text-sm text-slate-500">Try adjusting your search or filters</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CraftsmanCard({ craftsman, navigate }) {
+  const catInfo = categories.find(c => c.id === craftsman.category);
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden card-hover shadow-sm">
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-xl shrink-0">
+            {craftsman.name.split(" ").map(n => n[0]).join("")}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-bold text-slate-800 truncate">{craftsman.name}</h3>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Badge color={craftsman.available ? "green" : "amber"}>
+                    {craftsman.available ? "Available" : "Limited"}
+                  </Badge>
+                  <span className="text-xs text-slate-400">{craftsman.location}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="flex items-center gap-1.5 mb-2">
+            <div className="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center">
+              <Icon name={catInfo?.icon || "wrench"} size={14} className="text-slate-500" />
+            </div>
+            <span className="text-sm font-medium text-slate-600">{catInfo?.label}</span>
+            <span className="text-slate-300">·</span>
+            <span className="text-sm text-slate-500">{craftsman.experience} yrs exp</span>
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <StarRating rating={craftsman.rating} size={14} />
+            <span className="text-sm font-medium text-slate-700">{craftsman.rating}</span>
+            <span className="text-sm text-slate-400">({craftsman.reviewCount} reviews)</span>
+          </div>
+          <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{craftsman.bio}</p>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {craftsman.services.slice(0, 3).map((s, i) => (
+            <span key={i} className="px-2 py-1 rounded-md bg-slate-50 text-xs text-slate-600 border border-slate-100">{s}</span>
+          ))}
+          {craftsman.services.length > 3 && (
+            <span className="px-2 py-1 rounded-md bg-slate-50 text-xs text-slate-400 border border-slate-100">+{craftsman.services.length - 3} more</span>
+          )}
+        </div>
+      </div>
+
+      <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <span className="text-sm font-semibold text-slate-700">{craftsman.priceRange}</span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate("profile", craftsman)}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium text-brand-600 hover:bg-brand-50 transition"
+          >
+            View Profile
+          </button>
+          <button
+            onClick={() => navigate("book", craftsman)}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium text-white btn-primary shadow-sm hover:shadow transition"
+          >
+            Book Now
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Craftsman Profile Page ───
+function CraftsmanProfilePage({ navigate, craftsman }) {
+  if (!craftsman) return null;
+  const catInfo = categories.find(c => c.id === craftsman.category);
+  const totalReviews = Object.values(craftsman.ratingBreakdown).reduce((a, b) => a + b, 0);
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <button onClick={() => navigate("browse")} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-6 transition">
+        <Icon name="arrowLeft" size={16} />
+        Back to search
+      </button>
+
+      {/* Header Card */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm mb-6">
+        <div className="h-32 bg-gradient-to-r from-brand-500 to-brand-600"></div>
+        <div className="px-6 pb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-10">
+            <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-lg">
+              <div className="w-full h-full rounded-xl bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-2xl">
+                {craftsman.name.split(" ").map(n => n[0]).join("")}
+              </div>
+            </div>
+            <div className="flex-1 pt-2 sm:pt-0">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <h1 className="text-2xl font-bold text-slate-800">{craftsman.name}</h1>
+                <Badge color={craftsman.available ? "green" : "amber"}>{craftsman.availability}</Badge>
+              </div>
+              <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+                <span className="flex items-center gap-1"><Icon name={catInfo?.icon || "wrench"} size={14} /> {catInfo?.label}</span>
+                <span>·</span>
+                <span className="flex items-center gap-1"><Icon name="mapPin" size={14} /> {craftsman.location}</span>
+                <span>·</span>
+                <span className="flex items-center gap-1"><Icon name="clock" size={14} /> {craftsman.experience} years</span>
+              </div>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button onClick={() => navigate("book", craftsman)} className="flex-1 sm:flex-none btn-primary text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:shadow transition flex items-center justify-center gap-2">
+                <Icon name="calendar" size={16} />
+                Book Service
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* About */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <Icon name="user" size={18} className="text-brand-500" />
+              About
+            </h2>
+            <p className="text-slate-600 leading-relaxed">{craftsman.bio}</p>
+          </div>
+
+          {/* Services */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Icon name="wrench" size={18} className="text-brand-500" />
+              Services Offered
+            </h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {craftsman.services.map((service, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
+                    <Icon name="check" size={14} />
+                  </div>
+                  <span className="text-sm font-medium text-slate-700">{service}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Photo Gallery Placeholder */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Icon name="image" size={18} className="text-brand-500" />
+              Work Gallery
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="aspect-square rounded-xl bg-slate-100 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 hover:border-brand-300 hover:bg-brand-50/50 transition cursor-pointer">
+                  <Icon name="image" size={24} className="text-slate-300" />
+                  <span className="text-xs text-slate-400 font-medium">Project {i}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Reviews */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Icon name="messageSquare" size={18} className="text-brand-500" />
+              Reviews ({craftsman.reviewCount})
+            </h2>
+            <div className="space-y-4">
+              {craftsman.reviews.map(review => (
+                <div key={review.id} className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold">
+                        {review.author[0]}
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-slate-700">{review.author}</span>
+                        <span className="text-xs text-slate-400 ml-2">{review.date}</span>
+                      </div>
+                    </div>
+                    <StarRating rating={review.rating} size={14} />
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed">{review.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* Rating Breakdown */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h3 className="font-bold text-slate-800 mb-4">Rating Breakdown</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-4xl font-extrabold text-slate-800">{craftsman.rating}</span>
+              <div>
+                <StarRating rating={craftsman.rating} size={16} />
+                <p className="text-xs text-slate-400 mt-0.5">{craftsman.reviewCount} reviews</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {[5, 4, 3, 2, 1].map(star => {
+                const count = craftsman.ratingBreakdown[star] || 0;
+                const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                return (
+                  <div key={star} className="flex items-center gap-3">
+                    <span className="text-xs font-medium text-slate-500 w-3">{star}</span>
+                    <Icon name="star" size={12} className="text-amber-400 -ml-1" />
+                    <div className="flex-1 rating-bar-bg">
+                      <div className="rating-bar-fill" style={{ width: `${pct}%` }}></div>
+                    </div>
+                    <span className="text-xs text-slate-400 w-6 text-right">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h3 className="font-bold text-slate-800 mb-4">Quick Stats</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-500 flex items-center gap-2"><Icon name="checkCircle" size={14} /> Jobs Completed</span>
+                <span className="font-semibold text-slate-700">{craftsman.completedJobs}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-500 flex items-center gap-2"><Icon name="dollarSign" size={14} /> Rate</span>
+                <span className="font-semibold text-slate-700">{craftsman.priceRange}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-500 flex items-center gap-2"><Icon name="award" size={14} /> Experience</span>
+                <span className="font-semibold text-slate-700">{craftsman.experience} years</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-500 flex items-center gap-2"><Icon name="trendUp" size={14} /> Response</span>
+                <span className="font-semibold text-trust-600">~2 hours</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h3 className="font-bold text-slate-800 mb-4">Contact</h3>
+            <div className="space-y-3">
+              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-50 text-brand-700 font-medium text-sm hover:bg-brand-100 transition">
+                <Icon name="phone" size={16} />
+                (555) 123-4567
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 text-slate-700 font-medium text-sm hover:bg-slate-100 transition">
+                <Icon name="mail" size={16} />
+                message@servix.app
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Book Service Page ───
+function BookServicePage({ navigate, craftsman, addBooking }) {
+  const [step, setStep] = useState(1);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [service, setService] = useState(craftsman?.services[0] || "");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  if (!craftsman) return null;
+
+  const handleSubmit = () => {
+    const newBooking = {
+      id: Date.now(),
+      craftsmanId: craftsman.id,
+      clientName: "Demo User",
+      date,
+      time,
+      service,
+      description,
+      price: price || "TBD",
+      status: "pending",
+      reviewed: false,
+    };
+    addBooking(newBooking);
+    setSubmitted(true);
+  };
+
+  if (submitted) {
+    return (
+      <div className="max-w-lg mx-auto px-4 sm:px-6 py-16 text-center">
+        <div className="w-20 h-20 rounded-full bg-trust-100 flex items-center justify-center mx-auto mb-6">
+          <Icon name="checkCircle" size={40} className="text-trust-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Booking Request Sent!</h2>
+        <p className="text-slate-500 mb-8">{craftsman.name} will review your request and confirm availability. You'll receive a notification once accepted.</p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 text-left shadow-sm">
+          <h3 className="font-semibold text-slate-700 mb-4">Booking Summary</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-slate-500">Craftsman</span><span className="font-medium text-slate-700">{craftsman.name}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Service</span><span className="font-medium text-slate-700">{service}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Date & Time</span><span className="font-medium text-slate-700">{date} at {time}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Agreed Price</span><span className="font-medium text-slate-700">{price || "TBD"}</span></div>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button onClick={() => navigate("browse")} className="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow transition">
+            Back to Browse
+          </button>
+          <button onClick={() => navigate("clientBookings")} className="px-6 py-3 rounded-xl font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+            View My Bookings
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <button onClick={() => navigate("profile", craftsman)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-6 transition">
+        <Icon name="arrowLeft" size={16} />
+        Back to profile
+      </button>
+
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-800 mb-1">Book a service</h1>
+        <p className="text-slate-500">With {craftsman.name} — {categories.find(c => c.id === craftsman.category)?.label}</p>
+      </div>
+
+      {/* Step Indicator */}
+      <div className="flex items-center gap-2 mb-8">
+        {[1, 2, 3].map(s => (
+          <div key={s} className="flex items-center gap-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition ${s <= step ? "btn-primary text-white" : "bg-slate-200 text-slate-400"}`}>
+              {s < step ? <Icon name="check" size={14} /> : s}
+            </div>
+            {s < 3 && <div className={`w-12 h-0.5 rounded-full transition ${s < step ? "bg-brand-500" : "bg-slate-200"}`}></div>}
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        {step === 1 && (
+          <div className="space-y-5">
+            <h2 className="font-bold text-slate-800 text-lg">1. Select service & schedule</h2>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Service Type</label>
+              <select value={service} onChange={e => setService(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none text-sm">
+                {craftsman.services.map((s, i) => <option key={i} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Preferred Date</label>
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Preferred Time</label>
+                <select value={time} onChange={e => setTime(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none text-sm">
+                  <option value="">Select time...</option>
+                  {["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Job Description</label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Describe what needs to be done, any specific requirements, access details..."
+                rows={4}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none text-sm resize-none"
+              />
+            </div>
+            <button
+              onClick={() => setStep(2)}
+              disabled={!date || !time || !description}
+              className="w-full btn-primary text-white py-3 rounded-xl font-semibold shadow-sm hover:shadow transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              Continue to Agreement
+              <Icon name="arrowRight" size={16} />
+            </button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-5">
+            <h2 className="font-bold text-slate-800 text-lg">2. Agree on terms</h2>
+            <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
+              <div className="flex items-center gap-2 mb-4 text-brand-700">
+                <Icon name="shield" size={18} />
+                <span className="font-semibold text-sm">Service Agreement Preview</span>
+              </div>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between py-2 border-b border-slate-200">
+                  <span className="text-slate-500">Craftsman</span>
+                  <span className="font-medium text-slate-700">{craftsman.name}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-slate-200">
+                  <span className="text-slate-500">Service</span>
+                  <span className="font-medium text-slate-700">{service}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-slate-200">
+                  <span className="text-slate-500">Date & Time</span>
+                  <span className="font-medium text-slate-700">{date} at {time}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-slate-200">
+                  <span className="text-slate-500">Scope</span>
+                  <span className="font-medium text-slate-700 max-w-xs text-right">{description}</span>
+                </div>
+                <div className="pt-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Agreed Price (optional)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                    <input
+                      type="text"
+                      value={price}
+                      onChange={e => setPrice(e.target.value)}
+                      placeholder="e.g. 250 or TBD"
+                      className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none text-sm"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">Leave blank to discuss pricing with the craftsman</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
+              <Icon name="info" size={18} className="text-amber-600 shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-800">
+                <p className="font-medium mb-1">Transparent Agreement</p>
+                <p>This summary ensures both parties agree on scope, timing, and pricing before work begins. No surprises.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setStep(1)} className="flex-1 px-4 py-3 rounded-xl font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                Back
+              </button>
+              <button onClick={() => setStep(3)} className="flex-1 btn-primary text-white py-3 rounded-xl font-semibold shadow-sm hover:shadow transition">
+                Review & Confirm
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-5">
+            <h2 className="font-bold text-slate-800 text-lg">3. Confirm booking</h2>
+            <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 space-y-3 text-sm">
+              <div className="flex justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-500">Craftsman</span>
+                <span className="font-medium text-slate-700">{craftsman.name}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-500">Service</span>
+                <span className="font-medium text-slate-700">{service}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-500">Date & Time</span>
+                <span className="font-medium text-slate-700">{date} at {time}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-slate-200">
+                <span className="text-slate-500">Price</span>
+                <span className="font-medium text-slate-700">{price ? `$${price}` : "To be discussed"}</span>
+              </div>
+              <div className="pt-1">
+                <span className="text-slate-500">Scope:</span>
+                <p className="mt-1 text-slate-700 leading-relaxed">{description}</p>
+              </div>
+            </div>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
+              <span className="text-sm text-slate-600">I agree to the terms of this service agreement and understand that this is a booking request subject to the craftsman's confirmation.</span>
+            </label>
+
+            <div className="flex gap-3">
+              <button onClick={() => setStep(2)} className="flex-1 px-4 py-3 rounded-xl font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                Back
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!agreed}
+                className="flex-1 btn-trust text-white py-3 rounded-xl font-semibold shadow-sm hover:shadow transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Icon name="send" size={16} />
+                Send Request
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Craftsman Dashboard ───
+function CraftsmanDashboard({ navigate, craftsmen, bookings: incomingBookings, updateBookingStatus }) {
+  const [activeTab, setActiveTab] = useState("requests");
+  const [requests, setRequests] = useState(incomingBookings);
+  const myProfile = craftsmen[0]; // Marcus Chen as demo provider
+
+  const handleAction = (id, action) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: action } : r));
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">Craftsman Dashboard</h1>
+        <p className="text-slate-500">Manage your profile, bookings, and availability</p>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <StatCard label="Total Jobs" value={myProfile.completedJobs} icon="briefcase" color="blue" />
+        <StatCard label="Rating" value={myProfile.rating} icon="star" color="amber" />
+        <StatCard label="Reviews" value={myProfile.reviewCount} icon="messageSquare" color="green" />
+        <StatCard label="Pending" value={requests.filter(r => r.status === "pending").length} icon="clock" color="slate" />
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-slate-100 p-1 rounded-xl w-fit">
+        <TabBtn active={activeTab === "requests"} onClick={() => setActiveTab("requests")} label="Booking Requests" />
+        <TabBtn active={activeTab === "profile"} onClick={() => setActiveTab("profile")} label="Profile Editor" />
+      </div>
+
+      {activeTab === "requests" && (
+        <div className="space-y-4">
+          {requests.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+              <Icon name="clipboard" size={40} className="text-slate-300 mx-auto mb-4" />
+              <h3 className="font-semibold text-slate-700 mb-1">No booking requests</h3>
+              <p className="text-sm text-slate-500">New requests will appear here</p>
+            </div>
+          ) : (
+            requests.map(req => (
+              <div key={req.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-sm">
+                      {req.clientName[0]}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">{req.clientName}</h3>
+                      <p className="text-sm text-slate-500">{req.service}</p>
+                    </div>
+                  </div>
+                  <Badge color={req.status === "pending" ? "amber" : req.status === "accepted" ? "green" : "red"}>
+                    {req.status === "pending" ? "Pending" : req.status === "accepted" ? "Accepted" : "Declined"}
+                  </Badge>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-3 mb-4 text-sm">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Icon name="calendar" size={14} className="text-slate-400" />
+                    {req.date}
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Icon name="clock" size={14} className="text-slate-400" />
+                    {req.time}
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Icon name="dollarSign" size={14} className="text-slate-400" />
+                    {req.price}
+                  </div>
+                </div>
+                <p className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3 mb-4">{req.description}</p>
+                {req.status === "pending" && (
+                  <div className="flex gap-3">
+                    <button onClick={() => handleAction(req.id, "accepted")} className="flex-1 sm:flex-none btn-trust text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:shadow transition flex items-center justify-center gap-2">
+                      <Icon name="check" size={16} />
+                      Accept
+                    </button>
+                    <button onClick={() => handleAction(req.id, "declined")} className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-semibold text-sm text-red-600 border border-red-200 hover:bg-red-50 transition flex items-center justify-center gap-2">
+                      <Icon name="x" size={16} />
+                      Decline
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === "profile" && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-xl">
+              {myProfile.name.split(" ").map(n => n[0]).join("")}
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800">{myProfile.name}</h3>
+              <p className="text-sm text-slate-500">{categories.find(c => c.id === myProfile.category)?.label}</p>
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Display Name</label>
+              <input type="text" defaultValue={myProfile.name} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Years of Experience</label>
+              <input type="number" defaultValue={myProfile.experience} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Bio</label>
+            <textarea defaultValue={myProfile.bio} rows={4} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 outline-none text-sm resize-none" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Services Offered</label>
+            <div className="flex flex-wrap gap-2">
+              {myProfile.services.map((s, i) => (
+                <span key={i} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 text-sm font-medium border border-brand-100">
+                  {s}
+                  <button className="hover:text-brand-900"><Icon name="x" size={14} /></button>
+                </span>
+              ))}
+              <button className="px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-slate-400 text-sm hover:border-brand-300 hover:text-brand-500 transition">
+                + Add Service
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Availability</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
+                <label key={day} className="flex items-center gap-2 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" defaultChecked={day !== "Sun"} className="w-4 h-4 rounded border-slate-300 text-brand-600" />
+                  <span className="text-sm font-medium text-slate-700">{day}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button className="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:shadow transition flex items-center gap-2">
+              <Icon name="check" size={16} />
+              Save Changes
+            </button>
+            <button className="px-6 py-2.5 rounded-xl font-semibold text-sm text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon, color }) {
+  const colors = {
+    blue: "bg-brand-50 text-brand-600",
+    amber: "bg-amber-50 text-amber-600",
+    green: "bg-trust-50 text-trust-600",
+    slate: "bg-slate-100 text-slate-600",
+  };
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+      <div className={`w-10 h-10 rounded-xl ${colors[color]} flex items-center justify-center mb-3`}>
+        <Icon name={icon} size={20} />
+      </div>
+      <div className="text-2xl font-extrabold text-slate-800">{value}</div>
+      <div className="text-sm text-slate-500">{label}</div>
+    </div>
+  );
+}
+
+function TabBtn({ active, onClick, label }) {
+  return (
+    <button onClick={onClick} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${active ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+      {label}
+    </button>
+  );
+}
+
+// ─── Client Bookings Page ───
+function ClientBookingsPage({ navigate, bookings, craftsmen }) {
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">My Bookings</h1>
+        <p className="text-slate-500">Track your service requests and leave reviews</p>
+      </div>
+
+      <div className="space-y-4">
+        {bookings.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+            <Icon name="clipboard" size={40} className="text-slate-300 mx-auto mb-4" />
+            <h3 className="font-semibold text-slate-700 mb-1">No bookings yet</h3>
+            <p className="text-sm text-slate-500 mb-4">Find a craftsman and book your first service</p>
+            <button onClick={() => navigate("browse")} className="btn-primary text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:shadow transition">
+              Browse Craftsmen
+            </button>
+          </div>
+        ) : (
+          bookings.map(booking => {
+            const craftsman = craftsmen.find(c => c.id === booking.craftsmanId);
+            return (
+              <div key={booking.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-sm">
+                      {craftsman?.name.split(" ").map(n => n[0]).join("")}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">{craftsman?.name}</h3>
+                      <p className="text-sm text-slate-500">{booking.service}</p>
+                    </div>
+                  </div>
+                  <Badge color={booking.status === "completed" ? "green" : booking.status === "pending" ? "amber" : "blue"}>
+                    {booking.status === "completed" ? "Completed" : booking.status === "pending" ? "Pending" : "Confirmed"}
+                  </Badge>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-3 mb-4 text-sm">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Icon name="calendar" size={14} className="text-slate-400" />
+                    {booking.date}
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Icon name="clock" size={14} className="text-slate-400" />
+                    {booking.time}
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Icon name="dollarSign" size={14} className="text-slate-400" />
+                    {booking.price}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {booking.status === "completed" && !booking.reviewed && (
+                    <button onClick={() => navigate("review", null, booking)} className="btn-trust text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-sm hover:shadow transition flex items-center gap-2">
+                      <Icon name="star" size={14} />
+                      Leave Review
+                    </button>
+                  )}
+                  {booking.status === "completed" && booking.reviewed && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-500 text-sm font-medium">
+                      <Icon name="check" size={14} />
+                      Reviewed
+                    </span>
+                  )}
+                  <button onClick={() => navigate("profile", craftsman)} className="px-4 py-2 rounded-lg text-sm font-medium text-brand-600 hover:bg-brand-50 transition">
+                    View Profile
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Review Page ───
+function ReviewPage({ navigate, booking, craftsman, addReview }) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  if (!booking || !craftsman) return null;
+
+  const handleSubmit = () => {
+    if (rating === 0) return;
+    addReview(craftsman.id, {
+      id: Date.now(),
+      author: "Demo User",
+      rating,
+      date: "Just now",
+      text: comment,
+    });
+    setSubmitted(true);
+  };
+
+  if (submitted) {
+    return (
+      <div className="max-w-lg mx-auto px-4 sm:px-6 py-16 text-center">
+        <div className="w-20 h-20 rounded-full bg-trust-100 flex items-center justify-center mx-auto mb-6">
+          <Icon name="thumbsUp" size={40} className="text-trust-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Thank you!</h2>
+        <p className="text-slate-500 mb-8">Your review helps others find great craftsmen.</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button onClick={() => navigate("clientBookings")} className="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-sm hover:shadow transition">
+            Back to My Bookings
+          </button>
+          <button onClick={() => navigate("browse")} className="px-6 py-3 rounded-xl font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+            Browse More Pros
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-lg mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <button onClick={() => navigate("clientBookings")} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-6 transition">
+        <Icon name="arrowLeft" size={16} />
+        Back to bookings
+      </button>
+
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-800 mb-1">Rate your experience</h1>
+        <p className="text-slate-500">How was your service with {craftsman.name}?</p>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+        {/* Booking Summary */}
+        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-sm">
+              {craftsman.name.split(" ").map(n => n[0]).join("")}
+            </div>
+            <div>
+              <div className="font-semibold text-slate-800 text-sm">{craftsman.name}</div>
+              <div className="text-xs text-slate-500">{booking.service} — {booking.date}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Star Rating */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-3">Your Rating</label>
+          <div className="flex items-center gap-2">
+            {[1, 2, 3, 4, 5].map(star => (
+              <button
+                key={star}
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+                onClick={() => setRating(star)}
+                className="transition-transform hover:scale-110"
+              >
+                <Icon
+                  name={star <= (hoverRating || rating) ? "star" : "starOutline"}
+                  size={36}
+                  className={star <= (hoverRating || rating) ? "star-filled" : "star-empty"}
+                />
+              </button>
+            ))}
+          </div>
+          <p className="text-sm text-slate-400 mt-2">
+            {rating === 5 && "Excellent!"}
+            {rating === 4 && "Very good"}
+            {rating === 3 && "Good"}
+            {rating === 2 && "Fair"}
+            {rating === 1 && "Poor"}
+            {rating === 0 && "Tap a star to rate"}
+          </p>
+        </div>
+
+        {/* Comment */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Your Review (optional)</label>
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="What went well? What could be improved?"
+            rows={4}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none text-sm resize-none"
+          />
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={rating === 0}
+          className="w-full btn-primary text-white py-3 rounded-xl font-semibold shadow-sm hover:shadow transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <Icon name="send" size={16} />
+          Submit Review
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Footer ───
+function Footer({ navigate }) {
+  return (
+    <footer className="bg-slate-900 text-slate-400 mt-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+                <Icon name="wrench" size={16} className="text-white" />
+              </div>
+              <span className="font-bold text-lg text-white tracking-tight">Servix</span>
+            </div>
+            <p className="text-sm leading-relaxed">Connecting homeowners with trusted local craftsmen. Transparent, reliable, and hassle-free.</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-white mb-4">For Clients</h4>
+            <ul className="space-y-2 text-sm">
+              <li><button onClick={() => navigate("browse")} className="hover:text-white transition">Find a Pro</button></li>
+              <li><button onClick={() => navigate("clientBookings")} className="hover:text-white transition">My Bookings</button></li>
+              <li><span className="hover:text-white transition cursor-pointer">How it Works</span></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-white mb-4">For Craftsmen</h4>
+            <ul className="space-y-2 text-sm">
+              <li><button onClick={() => navigate("dashboard")} className="hover:text-white transition">Join as Pro</button></li>
+              <li><span className="hover:text-white transition cursor-pointer">Success Stories</span></li>
+              <li><span className="hover:text-white transition cursor-pointer">Pricing</span></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-white mb-4">Support</h4>
+            <ul className="space-y-2 text-sm">
+              <li><span className="hover:text-white transition cursor-pointer">Help Center</span></li>
+              <li><span className="hover:text-white transition cursor-pointer">Safety</span></li>
+              <li><span className="hover:text-white transition cursor-pointer">Contact Us</span></li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-slate-800 pt-8 text-sm text-center">
+          <p>© 2026 Servix. Demo MVP for presentation purposes.</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ─── Mount ───
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
