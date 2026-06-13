@@ -3,6 +3,7 @@ export const paths = {
   login: "/login",
   browse: "/browse",
   dashboard: "/dashboard",
+  providerProfile: "/dashboard/profile",
   bookings: "/bookings",
   craftsman: (craftsmanId) => `/craftsmen/${craftsmanId}`,
   bookCraftsman: (craftsmanId) => `/craftsmen/${craftsmanId}/book`,

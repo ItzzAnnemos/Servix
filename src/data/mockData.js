@@ -9,6 +9,38 @@ export const categories = [
   { id: "landscaper", label: "Landscaper", icon: "Trees" },
 ];
 
+function galleryImage(title, accent, dark) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="720" height="540" viewBox="0 0 720 540">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="${accent}"/>
+          <stop offset="1" stop-color="${dark}"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="34%" cy="24%" r="70%">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.34"/>
+          <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="720" height="540" fill="url(#bg)"/>
+      <rect width="720" height="540" fill="url(#glow)"/>
+      <path d="M0 376 C116 322 191 395 302 336 C434 267 514 331 720 244 L720 540 L0 540 Z" fill="#0f172a" opacity="0.34"/>
+      <path d="M90 148 H630 V392 H90 Z" rx="24" fill="#ffffff" opacity="0.13"/>
+      <path d="M142 318 H578" stroke="#ffffff" stroke-width="18" stroke-linecap="round" opacity="0.32"/>
+      <path d="M142 365 H424" stroke="#ffffff" stroke-width="18" stroke-linecap="round" opacity="0.2"/>
+      <circle cx="528" cy="176" r="54" fill="#ffffff" opacity="0.22"/>
+    </svg>`;
+
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function galleryItems(titles, palette) {
+  return titles.map((title, index) => {
+    const [accent, dark] = palette[index % palette.length];
+    return { title, image: galleryImage(title, accent, dark) };
+  });
+}
+
 export const craftsmen = [
   {
     id: 1,
@@ -25,7 +57,7 @@ export const craftsmen = [
     location: "Downtown, 2.3 mi",
     responseTime: "~2 hours",
     completedJobs: 156,
-    gallery: ["Kitchen pendant lighting", "EV charger install", "Panel upgrade", "Retail lighting", "Outdoor safety lights", "Smart switch wall"],
+    gallery: galleryItems(["Kitchen pendant lighting", "EV charger install", "Panel upgrade", "Retail lighting", "Outdoor safety lights", "Smart switch wall"], [["#2563eb", "#0f172a"], ["#0891b2", "#164e63"], ["#475569", "#111827"]]),
     reviews: [
       { id: 1, author: "Sarah J.", rating: 5, date: "2 weeks ago", text: "Marcus rewired our entire kitchen in one day. Professional, punctual, and explained everything clearly." },
       { id: 2, author: "David K.", rating: 5, date: "1 month ago", text: "Installed our EV charger perfectly. Fair pricing and top-notch work." },
@@ -48,7 +80,7 @@ export const craftsmen = [
     location: "Westside, 4.1 mi",
     responseTime: "~1 hour",
     completedJobs: 203,
-    gallery: ["Bathroom renovation", "Water heater install", "Basement pipe repair", "Drain access cleanout", "Vanity fixture set", "Copper line replacement"],
+    gallery: galleryItems(["Bathroom renovation", "Water heater install", "Basement pipe repair", "Drain access cleanout", "Vanity fixture set", "Copper line replacement"], [["#0d9488", "#134e4a"], ["#0284c7", "#0c4a6e"], ["#64748b", "#1e293b"]]),
     reviews: [
       { id: 1, author: "James T.", rating: 5, date: "1 week ago", text: "Elena fixed a burst pipe in our basement at 10 PM. Clear pricing and fast work." },
       { id: 2, author: "Amanda R.", rating: 5, date: "3 weeks ago", text: "Renovated our master bathroom beautifully. On time, on budget, and very clean." },
@@ -71,7 +103,7 @@ export const craftsmen = [
     location: "North End, 1.8 mi",
     responseTime: "~4 hours",
     completedJobs: 128,
-    gallery: ["Exterior repaint", "Cabinet refinishing", "Nursery accent wall", "Stairwell refresh", "Color sample board", "Door trim finish"],
+    gallery: galleryItems(["Exterior repaint", "Cabinet refinishing", "Nursery accent wall", "Stairwell refresh", "Color sample board", "Door trim finish"], [["#db2777", "#831843"], ["#ea580c", "#7c2d12"], ["#7c3aed", "#312e81"]]),
     reviews: [
       { id: 1, author: "Karen S.", rating: 5, date: "3 weeks ago", text: "The color matching was perfect and not a single drip anywhere." },
       { id: 2, author: "Tom H.", rating: 4, date: "2 months ago", text: "Great exterior paint job. Took a bit longer than quoted, but the result was worth it." },
@@ -94,7 +126,7 @@ export const craftsmen = [
     location: "Eastside, 3.5 mi",
     responseTime: "~3 hours",
     completedJobs: 89,
-    gallery: ["Walnut shelving", "Deck rebuild", "Mudroom built-in", "Oak dining bench", "Crown molding", "Stair repair"],
+    gallery: galleryItems(["Walnut shelving", "Deck rebuild", "Mudroom built-in", "Oak dining bench", "Crown molding", "Stair repair"], [["#92400e", "#422006"], ["#166534", "#14532d"], ["#57534e", "#1c1917"]]),
     reviews: [
       { id: 1, author: "Helen G.", rating: 5, date: "1 week ago", text: "Tom built a custom bookshelf that fits our odd-shaped nook perfectly." },
       { id: 2, author: "Mark D.", rating: 5, date: "1 month ago", text: "Rebuilt our deck and it looks better than new." },
@@ -117,7 +149,7 @@ export const craftsmen = [
     location: "South District, 1.2 mi",
     responseTime: "~45 min",
     completedJobs: 178,
-    gallery: ["Mounted media wall", "Drywall patch", "Closet shelving", "Kitchen hardware", "Fixture swap", "Flat-pack assembly"],
+    gallery: galleryItems(["Mounted media wall", "Drywall patch", "Closet shelving", "Kitchen hardware", "Fixture swap", "Flat-pack assembly"], [["#4f46e5", "#312e81"], ["#64748b", "#334155"], ["#0f766e", "#134e4a"]]),
     reviews: [
       { id: 1, author: "Jake B.", rating: 5, date: "3 days ago", text: "Mounted 3 TVs and assembled an IKEA kitchen in one afternoon." },
       { id: 2, author: "Monica V.", rating: 4, date: "2 weeks ago", text: "Fixed our drywall and painted the patch seamlessly." },
@@ -140,7 +172,7 @@ export const craftsmen = [
     location: "Uptown, 5.2 mi",
     responseTime: "~3 hours",
     completedJobs: 97,
-    gallery: ["LED retail retrofit", "Smart panel", "Solar-ready conduit", "Breaker cleanup", "Garage circuits", "Safety inspection"],
+    gallery: galleryItems(["LED retail retrofit", "Smart panel", "Solar-ready conduit", "Breaker cleanup", "Garage circuits", "Safety inspection"], [["#1d4ed8", "#1e3a8a"], ["#0369a1", "#0c4a6e"], ["#334155", "#020617"]]),
     reviews: [
       { id: 1, author: "Rachel F.", rating: 5, date: "2 weeks ago", text: "Diego's LED retrofit cut our energy bill by 40%." },
       { id: 2, author: "Steve W.", rating: 4, date: "1 month ago", text: "Good work on the smart panel. The end result is solid." },
@@ -162,7 +194,7 @@ export const craftsmen = [
     location: "Midtown, 3.1 mi",
     responseTime: "~1 hour",
     completedJobs: 144,
-    gallery: ["Heat pump install", "Duct inspection", "Mini-split service", "Thermostat setup", "Filter cabinet", "Condenser repair"],
+    gallery: galleryItems(["Heat pump install", "Duct inspection", "Mini-split service", "Thermostat setup", "Filter cabinet", "Condenser repair"], [["#0284c7", "#075985"], ["#059669", "#064e3b"], ["#475569", "#1e293b"]]),
     reviews: [
       { id: 1, author: "Evan R.", rating: 5, date: "5 days ago", text: "Priya found the issue in 20 minutes and had cold air running the same visit." },
       { id: 2, author: "Mila C.", rating: 5, date: "4 weeks ago", text: "Clear quote, clean installation, and useful maintenance guidance." },
@@ -184,7 +216,7 @@ export const craftsmen = [
     location: "Lakeside, 6.4 mi",
     responseTime: "~5 hours",
     completedJobs: 112,
-    gallery: ["Backyard cleanup", "Drought garden", "Edged beds", "Irrigation repair", "Patio planters", "Front yard refresh"],
+    gallery: galleryItems(["Backyard cleanup", "Drought garden", "Edged beds", "Irrigation repair", "Patio planters", "Front yard refresh"], [["#15803d", "#14532d"], ["#65a30d", "#365314"], ["#0f766e", "#134e4a"]]),
     reviews: [
       { id: 1, author: "Grace V.", rating: 5, date: "1 week ago", text: "Our yard finally looks intentional. Noah also fixed two sprinkler leaks." },
       { id: 2, author: "Ben L.", rating: 4, date: "6 weeks ago", text: "Good cleanup and fair price. Scheduling took one extra day." },

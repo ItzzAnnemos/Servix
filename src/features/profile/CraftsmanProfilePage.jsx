@@ -58,14 +58,20 @@ function Reviews({ reviews }) {
   );
 }
 
-export default function CraftsmanProfilePage({ craftsman }) {
+function normalizeGalleryItem(item) {
+  return typeof item === "string" ? { title: item, image: null } : item;
+}
+
+export default function CraftsmanProfilePage({ craftsman, backTo = paths.browse, backLabel = "Back to search", showBackLink = true, showBookingAction = true }) {
   if (!craftsman) {
     return (
       <div className="narrow-container section">
-        <Link className="back-button" to={paths.browse}>
-          <AppIcon name="ArrowLeft" size={16} />
-          Back to search
-        </Link>
+        {showBackLink && (
+          <Link className="back-button" to={backTo}>
+            <AppIcon name="ArrowLeft" size={16} />
+            {backLabel}
+          </Link>
+        )}
         <div className="empty-state card">
           <h2>No craftsman selected</h2>
           <p className="page-copy">Choose a professional from browse to view their profile.</p>
@@ -78,10 +84,12 @@ export default function CraftsmanProfilePage({ craftsman }) {
 
   return (
     <div className="container section">
-      <Link className="back-button" to={paths.browse}>
-        <AppIcon name="ArrowLeft" size={16} />
-        Back to search
-      </Link>
+      {showBackLink && (
+        <Link className="back-button" to={backTo}>
+          <AppIcon name="ArrowLeft" size={16} />
+          {backLabel}
+        </Link>
+      )}
 
       <section className="card">
         <div className="profile-cover" />
@@ -90,7 +98,7 @@ export default function CraftsmanProfilePage({ craftsman }) {
             <div className="person-line">
               <Avatar name={craftsman.name} size="lg" />
               <div>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <div className="profile-title-row">
                   <h1 className="page-title" style={{ margin: 0 }}>{craftsman.name}</h1>
                   <Badge color={craftsman.available ? "green" : "amber"}>{craftsman.availability}</Badge>
                 </div>
@@ -99,10 +107,12 @@ export default function CraftsmanProfilePage({ craftsman }) {
                 </div>
               </div>
             </div>
-            <Link className="btn-primary" to={paths.bookCraftsman(craftsman.id)}>
-              <AppIcon name="Calendar" size={17} />
-              Book Service
-            </Link>
+            {showBookingAction && (
+              <Link className="btn-primary" to={paths.bookCraftsman(craftsman.id)}>
+                <AppIcon name="Calendar" size={17} />
+                Book Service
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -133,14 +143,23 @@ export default function CraftsmanProfilePage({ craftsman }) {
           <section className="profile-panel card">
             <h2>Work Gallery</h2>
             <div className="gallery-grid">
-              {craftsman.gallery.map((item) => <div key={item} className="gallery-item">{item}</div>)}
+              {craftsman.gallery.map((entry) => {
+                const item = normalizeGalleryItem(entry);
+
+                return (
+                  <figure key={item.title} className="gallery-item">
+                    {item.image && <img className="gallery-image" src={item.image} alt={item.title} loading="lazy" />}
+                    <figcaption>{item.title}</figcaption>
+                  </figure>
+                );
+              })}
             </div>
           </section>
 
           <Reviews reviews={craftsman.reviews} />
         </div>
 
-        <div className="profile-stack">
+        <div className="profile-stack profile-sidebar">
           <RatingBreakdown craftsman={craftsman} />
           <section className="profile-panel card">
             <h3>Quick Stats</h3>
@@ -148,7 +167,6 @@ export default function CraftsmanProfilePage({ craftsman }) {
               <div className="stat-row"><span>Jobs Completed</span><strong>{craftsman.completedJobs}</strong></div>
               <div className="stat-row"><span>Rate</span><strong>{craftsman.priceRange}</strong></div>
               <div className="stat-row"><span>Response</span><strong>{craftsman.responseTime}</strong></div>
-              <div className="stat-row"><span>Rating</span><strong>{craftsman.rating}/5</strong></div>
             </div>
           </section>
           <section className="profile-panel card">

@@ -7,6 +7,7 @@ import LoginPage from "./features/auth/LoginPage.jsx";
 import LandingPage from "./features/landing/LandingPage.jsx";
 import BrowsePage from "./features/browse/BrowsePage.jsx";
 import CraftsmanProfilePage from "./features/profile/CraftsmanProfilePage.jsx";
+import ProviderProfileWorkspace from "./features/profile/ProviderProfileWorkspace.jsx";
 import BookServicePage from "./features/booking/BookServicePage.jsx";
 import CraftsmanDashboard from "./features/dashboard/CraftsmanDashboard.jsx";
 import ClientBookingsPage from "./features/bookings/ClientBookingsPage.jsx";
@@ -91,6 +92,10 @@ function AppRoutes() {
     setBookings((current) => current.map((booking) => (booking.id === bookingId ? { ...booking, reviewed: true } : booking)));
   }
 
+  function updateProviderProfile(updatedProvider) {
+    setCraftsmen((current) => current.map((craftsman) => (craftsman.id === updatedProvider.id ? updatedProvider : craftsman)));
+  }
+
   function handleLogin(user) {
     setCurrentUser(user);
     setMobileMenuOpen(false);
@@ -129,6 +134,7 @@ function AppRoutes() {
         </Route>
         <Route element={<RequireRole currentUser={currentUser} allowedRoles={["provider"]} />}>
           <Route path={paths.dashboard} element={<CraftsmanDashboard provider={provider} initialBookings={providerBookings} />} />
+          <Route path={paths.providerProfile} element={<ProviderProfileWorkspace provider={provider} onSave={updateProviderProfile} />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to={paths.home} replace />} />
