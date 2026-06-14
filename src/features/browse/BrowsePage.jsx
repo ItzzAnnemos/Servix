@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { categories } from "../../data/mockData.js";
 import AppIcon from "../../components/ui/AppIcon.jsx";
 import EmptyState from "../../components/ui/EmptyState.jsx";
+import SelectMenu from "../../components/ui/SelectMenu.jsx";
 import CraftsmanCard from "./CraftsmanCard.jsx";
-import { paths } from "../../routes/paths.js";
 
 export default function BrowsePage({ craftsmen }) {
   const [search, setSearch] = useState("");
@@ -12,6 +11,7 @@ export default function BrowsePage({ craftsmen }) {
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState("rating");
   const [availableOnly, setAvailableOnly] = useState(false);
+  const hasActiveFilters = search.trim() !== "" || activeCategory !== "all" || minRating !== 0 || sortBy !== "rating" || availableOnly;
 
   const filteredCraftsmen = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -42,10 +42,6 @@ export default function BrowsePage({ craftsmen }) {
           <h1 className="page-title">Find a craftsman</h1>
           <p className="page-copy">Browse {craftsmen.length} verified professionals, compare strengths, and book with clear expectations.</p>
         </div>
-        <Link className="btn-secondary" to={paths.bookings}>
-          <AppIcon name="Clipboard" size={17} />
-          My Bookings
-        </Link>
       </div>
 
       <div className="browse-layout">
@@ -68,21 +64,31 @@ export default function BrowsePage({ craftsmen }) {
           <div style={{ display: "grid", gap: 14 }}>
             <div>
               <label className="field-label" htmlFor="sortBy">Sort results</label>
-              <select id="sortBy" className="select" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                <option value="rating">Top rated</option>
-                <option value="experience">Most experienced</option>
-                <option value="reviews">Most reviews</option>
-                <option value="distance">Nearest</option>
-              </select>
+              <SelectMenu
+                id="sortBy"
+                value={sortBy}
+                onChange={setSortBy}
+                options={[
+                  { value: "rating", label: "Top rated" },
+                  { value: "experience", label: "Most experienced" },
+                  { value: "reviews", label: "Most reviews" },
+                  { value: "distance", label: "Nearest" },
+                ]}
+              />
             </div>
             <div>
               <label className="field-label" htmlFor="minRating">Minimum rating</label>
-              <select id="minRating" className="select" value={minRating} onChange={(event) => setMinRating(Number(event.target.value))}>
-                <option value={0}>Any rating</option>
-                <option value={4.5}>4.5+ stars</option>
-                <option value={4}>4.0+ stars</option>
-                <option value={3}>3.0+ stars</option>
-              </select>
+              <SelectMenu
+                id="minRating"
+                value={minRating}
+                onChange={setMinRating}
+                options={[
+                  { value: 0, label: "Any rating" },
+                  { value: 4.5, label: "4.5+ stars" },
+                  { value: 4, label: "4.0+ stars" },
+                  { value: 3, label: "3.0+ stars" },
+                ]}
+              />
             </div>
             <label className="check-tile" style={{ justifyContent: "flex-start" }}>
               <input type="checkbox" checked={availableOnly} onChange={(event) => setAvailableOnly(event.target.checked)} />
@@ -97,16 +103,18 @@ export default function BrowsePage({ craftsmen }) {
               <strong>{filteredCraftsmen.length} result{filteredCraftsmen.length === 1 ? "" : "s"}</strong>
               <div className="small-muted">Filtered by category, rating, availability, and service keywords.</div>
             </div>
-            <button className="btn-secondary" onClick={() => {
-              setSearch("");
-              setActiveCategory("all");
-              setMinRating(0);
-              setSortBy("rating");
-              setAvailableOnly(false);
-            }}>
-              <AppIcon name="Filter" size={16} />
-              Reset
-            </button>
+            {hasActiveFilters && (
+              <button className="btn-danger" onClick={() => {
+                setSearch("");
+                setActiveCategory("all");
+                setMinRating(0);
+                setSortBy("rating");
+                setAvailableOnly(false);
+              }}>
+                <AppIcon name="Filter" size={16} />
+                Reset
+              </button>
+            )}
           </div>
 
           {filteredCraftsmen.length > 0 ? (

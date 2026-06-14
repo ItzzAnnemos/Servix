@@ -90,12 +90,12 @@ export default function LandingPage() {
           </div>
           <div className="service-grid">
             {categories.filter((category) => category.id !== "all").map((category) => (
-              <Link key={category.id} className="service-tile" to={paths.login} state={{ requiredRole: "client" }}>
+              <div key={category.id} className="service-tile">
                 <span className="icon-tile">
                   <AppIcon name={category.icon} size={25} />
                 </span>
                 {category.label}
-              </Link>
+              </div>
             ))}
           </div>
         </div>

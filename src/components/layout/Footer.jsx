@@ -21,11 +21,11 @@ export default function Footer({ currentUser }) {
           {isProvider ? (
             <>
               <div>
-                <h4>Workspace</h4>
+                <h4>For Craftsmen</h4>
                 <ul>
                   <li><Link className="footer-link" to={paths.dashboard}>Dashboard</Link></li>
-                  <li><Link className="footer-link" to={paths.dashboard}>Booking Requests</Link></li>
-                  <li><Link className="footer-link" to={paths.dashboard}>Profile Tools</Link></li>
+                  <li><Link className="footer-link" to={paths.providerProfile}>Profile</Link></li>
+                  <li><Link className="footer-link" to={paths.home}>How it Works</Link></li>
                 </ul>
               </div>
               <div>

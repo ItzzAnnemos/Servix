@@ -226,16 +226,16 @@ export const craftsmen = [
 ];
 
 export const clientBookings = [
-  { id: 101, craftsmanId: 1, clientName: "Demo User", date: "2026-06-15", time: "10:00 AM", service: "Lighting Installation", description: "Install 4 pendant lights in kitchen", price: "$320", status: "completed", reviewed: false },
-  { id: 102, craftsmanId: 2, clientName: "Demo User", date: "2026-06-18", time: "2:00 PM", service: "Leak Repair", description: "Fix leaking pipe under kitchen sink", price: "$180", status: "pending", reviewed: false },
-  { id: 103, craftsmanId: 7, clientName: "Demo User", date: "2026-06-22", time: "9:00 AM", service: "Seasonal Tune-up", description: "Pre-summer AC tune-up and filter inspection", price: "$145", status: "accepted", reviewed: false },
+  { id: 101, craftsmanId: 1, clientName: "Demo User", date: "2026-06-15", time: "10:00 AM", service: "Lighting Installation", description: "Install 4 pendant lights in kitchen", price: "320", status: "completed", reviewed: false },
+  { id: 102, craftsmanId: 2, clientName: "Demo User", date: "2026-06-18", time: "2:00 PM", service: "Leak Repair", description: "Fix leaking pipe under kitchen sink", price: "180", status: "pending", reviewed: false },
+  { id: 103, craftsmanId: 7, clientName: "Demo User", date: "2026-06-22", time: "9:00 AM", service: "Seasonal Tune-up", description: "Pre-summer AC tune-up and filter inspection", price: "145", status: "accepted", reviewed: false },
 ];
 
 export const providerBookings = [
-  { id: 201, clientName: "Sarah Johnson", date: "2026-06-14", time: "9:00 AM", service: "Panel Upgrade", description: "Upgrade 100A to 200A panel", price: "$2,400", status: "pending" },
-  { id: 202, clientName: "Mike Peters", date: "2026-06-16", time: "1:00 PM", service: "EV Charger Install", description: "Install Level 2 charger in garage", price: "$850", status: "pending" },
-  { id: 203, clientName: "Anna Lee", date: "2026-06-10", time: "11:00 AM", service: "Smart Home Wiring", description: "Wire smart switches throughout house", price: "$600", status: "accepted" },
-  { id: 204, clientName: "Nora Fischer", date: "2026-06-20", time: "4:00 PM", service: "Safety Inspection", description: "Inspect older detached garage wiring", price: "$190", status: "pending" },
+  { id: 201, clientName: "Sarah Johnson", date: "2026-06-14", time: "9:00 AM", service: "Panel Upgrade", description: "Upgrade 100A to 200A panel", price: "2,400", status: "pending" },
+  { id: 202, clientName: "Mike Peters", date: "2026-06-16", time: "1:00 PM", service: "EV Charger Install", description: "Install Level 2 charger in garage", price: "850", status: "pending" },
+  { id: 203, clientName: "Anna Lee", date: "2026-06-10", time: "11:00 AM", service: "Smart Home Wiring", description: "Wire smart switches throughout house", price: "600", status: "accepted" },
+  { id: 204, clientName: "Nora Fischer", date: "2026-06-20", time: "4:00 PM", service: "Safety Inspection", description: "Inspect older detached garage wiring", price: "190", status: "pending" },
 ];
 
 export const landingSteps = [

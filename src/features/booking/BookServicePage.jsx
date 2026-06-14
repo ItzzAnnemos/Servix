@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { categories, timeSlots } from "../../data/mockData.js";
 import { getCategory } from "../../utils/formatters.js";
 import AppIcon from "../../components/ui/AppIcon.jsx";
+import SelectMenu from "../../components/ui/SelectMenu.jsx";
 import { paths } from "../../routes/paths.js";
 
 function StepIndicator({ step }) {
@@ -41,7 +42,7 @@ export default function BookServicePage({ craftsman, addBooking }) {
       time,
       service,
       description,
-      price: price ? `$${price.replace(/^\$/, "")}` : "TBD",
+      price: price ? price.replace(/^\$/, "") : "TBD",
       status: "pending",
       reviewed: false,
     });
@@ -90,9 +91,12 @@ export default function BookServicePage({ craftsman, addBooking }) {
             <h2>1. Select service & schedule</h2>
             <div>
               <label className="field-label" htmlFor="service">Service Type</label>
-              <select id="service" className="select" value={service} onChange={(event) => setService(event.target.value)}>
-                {craftsman.services.map((item) => <option key={item} value={item}>{item}</option>)}
-              </select>
+              <SelectMenu
+                id="service"
+                value={service}
+                onChange={setService}
+                options={craftsman.services.map((item) => ({ value: item, label: item }))}
+              />
             </div>
             <div className="form-grid">
               <div>
@@ -101,10 +105,15 @@ export default function BookServicePage({ craftsman, addBooking }) {
               </div>
               <div>
                 <label className="field-label" htmlFor="time">Preferred Time</label>
-                <select id="time" className="select" value={time} onChange={(event) => setTime(event.target.value)}>
-                  <option value="">Select time...</option>
-                  {timeSlots.map((slot) => <option key={slot} value={slot}>{slot}</option>)}
-                </select>
+                <SelectMenu
+                  id="time"
+                  value={time}
+                  onChange={setTime}
+                  options={[
+                    { value: "", label: "Select time..." },
+                    ...timeSlots.map((slot) => ({ value: slot, label: slot })),
+                  ]}
+                />
               </div>
             </div>
             <div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router-dom";
 import Navbar from "./components/layout/Navbar.jsx";
 import Footer from "./components/layout/Footer.jsx";
@@ -43,10 +43,20 @@ function RequireRole({ currentUser, allowedRoles }) {
   return <Outlet />;
 }
 
-function AppLayout({ currentUser, onLogout, mobileMenuOpen, setMobileMenuOpen }) {
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [pathname]);
+
+  return null;
+}
+
+function AppLayout({ currentUser, mobileMenuOpen, setMobileMenuOpen }) {
   return (
     <div className="app-shell">
-      <Navbar currentUser={currentUser} onLogout={onLogout} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+      <Navbar currentUser={currentUser} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
       <main className="fade-in">
         <Outlet />
       </main>
@@ -101,16 +111,11 @@ function AppRoutes() {
     setMobileMenuOpen(false);
   }
 
-  function handleLogout() {
-    setCurrentUser(null);
-    setMobileMenuOpen(false);
-  }
-
   return (
     <Routes>
       <Route path={paths.home} element={<LandingPage />} />
       <Route path={paths.login} element={<LoginPage onLogin={handleLogin} />} />
-      <Route element={<AppLayout currentUser={currentUser} onLogout={handleLogout} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />}>
+      <Route element={<AppLayout currentUser={currentUser} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />}>
         <Route element={<RequireRole currentUser={currentUser} allowedRoles={["client"]} />}>
           <Route path={paths.browse} element={<BrowsePage craftsmen={craftsmen} />} />
           <Route
@@ -145,6 +150,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AppRoutes />
     </BrowserRouter>
   );

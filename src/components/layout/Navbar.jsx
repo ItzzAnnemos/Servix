@@ -20,7 +20,7 @@ function MobileNavButton({ icon, label, to, onClick }) {
   );
 }
 
-export default function Navbar({ currentUser, onLogout, mobileMenuOpen, setMobileMenuOpen }) {
+export default function Navbar({ currentUser, mobileMenuOpen, setMobileMenuOpen }) {
   const closeMobileMenu = () => setMobileMenuOpen(false);
   const dashboardMatch = useMatch(`${paths.dashboard}/*`);
   const isProvider = currentUser?.role === "provider" || Boolean(dashboardMatch);
@@ -49,7 +49,6 @@ export default function Navbar({ currentUser, onLogout, mobileMenuOpen, setMobil
               {currentUser?.name ?? "Guest"}
             </span>
             <Link className="btn-ghost" to={paths.login}>Switch Role</Link>
-            {currentUser && <button className="btn-secondary nav-logout" onClick={onLogout}>Log out</button>}
           </div>
 
           <button className="mobile-toggle" onClick={() => setMobileMenuOpen((open) => !open)} aria-label="Toggle menu">
@@ -63,7 +62,6 @@ export default function Navbar({ currentUser, onLogout, mobileMenuOpen, setMobil
         {isClient && <MobileNavButton icon="Clipboard" label="My Bookings" to={paths.bookings} onClick={closeMobileMenu} />}
         {isProvider && <MobileNavButton icon="Briefcase" label="Dashboard" to={paths.dashboard} onClick={closeMobileMenu} />}
         <MobileNavButton icon="LogOut" label="Switch Role" to={paths.login} onClick={closeMobileMenu} />
-        {currentUser && <button className="mobile-nav-button" onClick={() => { onLogout(); closeMobileMenu(); }}>Log out</button>}
       </div>
     </nav>
   );
